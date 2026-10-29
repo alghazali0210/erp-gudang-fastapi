@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modul Gudang - ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0b1b2e; --ink-2:#16294a; --muted:#5b6878; --line:#e2e7ee;
+  --paper:#f2f5f9; --card:#fff; --accent:#1d5fd0; --accent-d:#164aa6; --accent-s:#e8f0fd;
+  --ok:#157f55; --ok-bg:#e2f5ec; --warn:#9a5a06; --warn-bg:#fcefd6; --bad:#b42318; --bad-bg:#fde7e5;
+  --radius:10px; --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;min-height:100vh}
+body{font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+.layar{display:none;min-height:100vh;width:100%}
+.layar.aktif{display:flex}
+.layar.login{justify-content:center;align-items:center;padding:20px;background:radial-gradient(1200px 600px at 20% 0%,#1c3a68 0%,transparent 60%),linear-gradient(160deg,#0b1b2e,#102340)}
+
+/* Sidebar */
+.side{width:240px;background:linear-gradient(180deg,#0b1b2e,#0f2240);color:#c9d4e3;padding:24px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px 24px;color:#fff;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand i{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#1d5fd0);display:grid;place-items:center;font-style:normal;font-size:15px;box-shadow:0 4px 10px rgba(29,95,208,.45)}
+.nav{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#c9d4e3;text-decoration:none;font-weight:500;transition:background .15s}
+.nav svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav.on{background:rgba(255,255,255,.09);color:#fff;box-shadow:inset 3px 0 0 #6ea2f0}
+.nav:not(.on):hover{background:rgba(255,255,255,.06)}
+.side small{margin-top:auto;padding:0 12px;color:#8396ad}
+
+/* Main */
+main{flex:1;min-width:0;background:var(--paper)}
+.top{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.top h1{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.top p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.top-actions{display:flex;align-items:center;gap:14px}
+.conn{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:999px;font-weight:500;font-size:13px;white-space:nowrap}
+.conn::before{content:"";width:8px;height:8px;border-radius:50%;background:#9aa6b5}
+.conn.up::before{background:#1fa971;box-shadow:0 0 0 3px #d4f1e3}
+.conn.down::before{background:#d92d20;box-shadow:0 0 0 3px #fbdcd9}
+.wrap{padding:26px 32px 48px;max-width:1320px}
+
+/* Ringkasan */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.stat{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+.stat span{color:var(--muted);font-size:13px;font-weight:500}
+.stat b{display:block;font-size:30px;font-weight:600;margin-top:4px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat.alert::before{background:var(--bad)}
+.stat.alert b{color:var(--bad)}
+
+/* Panel & form */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel>header{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.panel>header h2{margin:0;font-size:15px;font-weight:600}
+.panel>header p{margin:1px 0 0;color:var(--muted);font-size:12.5px}
+.panel .body{padding:22px}
+.forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-weight:500;font-size:13px;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,select{width:100%;height:40px;padding:0 12px;border:1px solid #c9d1dc;border-radius:8px;font:inherit;color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s}
+input::placeholder{color:#8f9bab}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,95,208,.18)}
+input[readonly]{background:#f4f6f9;color:var(--muted)}
+
+.btn{height:40px;width:100%;border:0;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;color:#fff;background:var(--accent);box-shadow:0 1px 2px rgba(16,24,40,.12);transition:background .15s,transform .05s}
+.btn:hover{background:var(--accent-d)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid rgba(29,95,208,.35);outline-offset:2px}
+.btn.alt{background:var(--ink)}
+.btn.alt:hover{background:var(--ink-2)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.btn.sm{height:34px;width:auto;padding:0 14px;font-size:13px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid #c9d1dc;box-shadow:none;height:30px;width:auto;padding:0 12px;font-size:13px}
+.btn.ghost:hover{background:var(--accent-s);border-color:var(--accent);color:var(--accent-d)}
+.btn.del{background:#fff;color:var(--bad);border:1px solid #f1c3be;box-shadow:none;height:30px;width:auto;padding:0 12px;font-size:13px}
+.btn.del:hover{background:var(--bad-bg)}
+.aksi{display:flex;gap:8px}
+
+/* Tabel */
+.search{width:240px;height:36px}
+.filter{width:150px;height:36px}
+.tools{display:flex;gap:10px;align-items:center}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:#f7f9fc;text-align:left;font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:11px 22px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:13px 22px;border-bottom:1px solid #edf0f5}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#f8fafd}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.id{color:var(--muted);font-variant-numeric:tabular-nums}
+.nm{font-weight:500}
+.rak{color:var(--muted);font-weight:500}
+.kode{font-variant-numeric:tabular-nums;font-weight:500}
+.waktu{white-space:nowrap;color:var(--muted)}
+.plus{color:var(--ok);font-weight:600}
+.minus{color:var(--bad);font-weight:600}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.tag.ok,.tag.in{background:var(--ok-bg);color:var(--ok)}
+.tag.low{background:var(--bad-bg);color:var(--bad)}
+.tag.mid,.tag.out{background:var(--warn-bg);color:var(--warn)}
+.riwayat{margin-top:22px}
+.empty{text-align:center;color:var(--muted);padding:36px 20px}
+
+/* Dialog edit */
+dialog{border:0;border-radius:12px;padding:0;width:min(420px,92vw);box-shadow:0 24px 60px rgba(11,27,46,.35);color:var(--ink)}
+dialog::backdrop{background:rgba(11,27,46,.55);backdrop-filter:blur(2px)}
+dialog header{padding:16px 22px;border-bottom:1px solid var(--line)}
+dialog header h2{margin:0;font-size:16px}
+dialog .body{padding:22px}
+.dlg-aksi{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.dlg-aksi .btn{width:auto;padding:0 18px}
+.dlg-aksi .ghost{height:40px}
+
+/* Toast */
+#toast{position:fixed;right:24px;bottom:24px;display:flex;flex-direction:column;gap:10px;z-index:30}
+.t{background:var(--ink);color:#fff;padding:12px 16px;border-radius:10px;border-left:4px solid #6ea2f0;max-width:360px;box-shadow:0 10px 28px rgba(11,27,46,.28);animation:in .2s ease-out}
+.t.err{border-left-color:#f0705f}
+.t.good{border-left-color:#3ccf91}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media (max-width:900px){
+  .side{display:none}
+  .stats{grid-template-columns:1fr}
+  .top,.wrap{padding-left:16px;padding-right:16px}
+  .search{width:160px}
+  th,td{padding-left:14px;padding-right:14px}
+}
+@media (prefers-reduced-motion:reduce){.t{animation:none}.btn{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- LAYAR 1: LOGIN -->
+<div id="layar-login" class="layar login aktif">
+  <div class="panel" style="width:100%;max-width:380px;box-shadow:0 16px 40px rgba(0,0,0,.3);">
+    <header><div><h2>Otorisasi Diperlukan</h2><p>Masukkan kredensial manajer gudang</p></div></header>
+    <div class="body">
+      <form id="form-login">
+        <div class="field">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" placeholder="Masukkan username" autocomplete="username" required>
+        </div>
+        <div class="field" style="margin-bottom:24px;">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="Masukkan password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn">Masuk ke Sistem</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- LAYAR 2: DASBOR -->
+<div id="layar-dasbor" class="layar">
+  <aside class="side">
+    <div class="brand"><i>▣</i> ERP Perusahaan</div>
+    <a class="nav on" href="#">
+      <svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+      Gudang
+    </a>
+    <small>Modul Gudang</small>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div>
+        <h1>Manajemen Gudang</h1>
+        <p>Kelola data barang dan catat pengambilan stok.</p>
+      </div>
+      <div class="top-actions">
+        <span class="conn" id="status">Menghubungkan…</span>
+        <button type="button" id="btn-logout" class="btn alt sm" aria-label="Keluar dari sistem">Keluar</button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <section class="stats" aria-label="Ringkasan stok">
+        <div class="stat"><span>Jenis barang</span><b id="s-jenis">0</b></div>
+        <div class="stat"><span>Total unit di gudang</span><b id="s-total">0</b></div>
+        <div class="stat" id="s-low-card"><span>Barang stok menipis (di bawah 5)</span><b id="s-low">0</b></div>
+      </section>
+
+      <section class="forms">
+        <div class="panel">
+          <header><div><h2>Tambah barang baru</h2><p>Data master barang gudang (butuh akses)</p></div></header>
+          <div class="body">
+            <form id="form-tambah">
+              <div class="field">
+                <label for="input-id">ID barang</label>
+                <input type="number" id="input-id" min="1" placeholder="Contoh: 4" required>
+              </div>
+              <div class="field">
+                <label for="input-nama">Nama komponen</label>
+                <input type="text" id="input-nama" placeholder="Contoh: Modul Relay" required>
+              </div>
+              <div class="field">
+                <label for="input-stok">Jumlah stok awal</label>
+                <input type="number" id="input-stok" min="0" placeholder="Contoh: 10" required>
+              </div>
+              <div class="field">
+                <label for="input-rak">Lokasi Rak</label>
+                <input type="text" id="input-rak" placeholder="Contoh: Rak A1" required>
+              </div>
+              <button type="submit" class="btn">Simpan barang</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel">
+          <header><div><h2>Barang masuk</h2><p>Tambah stok barang yang sudah ada</p></div></header>
+          <div class="body">
+            <form id="form-masuk">
+              <div class="field">
+                <label for="input-id-masuk">ID barang</label>
+                <input type="number" id="input-id-masuk" min="1" placeholder="Contoh: 1" required>
+              </div>
+              <div class="field">
+                <label for="input-jumlah-masuk">Jumlah masuk</label>
+                <input type="number" id="input-jumlah-masuk" min="1" placeholder="Contoh: 20" required>
+              </div>
+              <div class="field">
+                <label for="input-ket-masuk">Keterangan / sumber (opsional)</label>
+                <input type="text" id="input-ket-masuk" placeholder="Contoh: Pembelian dari PT Maju">
+              </div>
+              <button type="submit" class="btn">Tambah stok</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel">
+          <header><div><h2>Catat pengambilan barang</h2><p>Stok akan berkurang otomatis</p></div></header>
+          <div class="body">
+            <form id="form-transaksi">
+              <div class="field">
+                <label for="input-id-karyawan">ID Karyawan / Nama Pengambil</label>
+                <input type="text" id="input-id-karyawan" placeholder="Contoh: KRY-001 / Budi" required>
+              </div>
+              <div class="grid2">
+                <div class="field">
+                  <label for="input-id-barang">ID barang</label>
+                  <input type="number" id="input-id-barang" min="1" placeholder="Contoh: 1" required>
+                </div>
+                <div class="field">
+                  <label for="input-jumlah">Jumlah diambil</label>
+                  <input type="number" id="input-jumlah" min="1" placeholder="Contoh: 5" required>
+                </div>
+              </div>
+              <div class="field">
+                <label for="input-keterangan">Keterangan / tujuan proyek</label>
+                <input type="text" id="input-keterangan" placeholder="Contoh: Proyek A" required>
+              </div>
+              <button type="submit" class="btn alt">Catat pengambilan</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <header>
+          <div><h2>Daftar stok barang</h2><p>Data langsung dari server</p></div>
+          <input class="search" id="cari" type="search" placeholder="Cari nama atau ID" aria-label="Cari barang">
+        </header>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr><th>ID barang</th><th>Nama komponen</th><th class="num">Sisa stok (unit)</th><th>Lokasi Rak</th><th>Status</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="tabel-data">
+              <tr><td colspan="6" class="empty">Memuat data dari server...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel riwayat">
+        <header>
+          <div><h2>Mutasi stok</h2><p>100 mutasi terbaru: barang masuk dan pengambilan</p></div>
+          <div class="tools">
+            <select id="filter-mutasi" class="filter" aria-label="Filter jenis mutasi">
+              <option value="">Semua</option>
+              <option value="masuk">Barang masuk</option>
+              <option value="keluar">Pengambilan</option>
+            </select>
+            <button type="button" id="btn-muat-riwayat" class="btn alt sm">Muat ulang</button>
+          </div>
+        </header>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr><th>Kode</th><th>Waktu</th><th>Jenis</th><th>Barang</th><th class="num">Jumlah</th><th>Oleh / Pengambil</th><th>Keterangan</th></tr>
+            </thead>
+            <tbody id="tabel-riwayat">
+              <tr><td colspan="7" class="empty">Memuat mutasi stok...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<dialog id="dlg-edit" aria-labelledby="judul-edit">
+  <header><h2 id="judul-edit">Edit barang</h2></header>
+  <div class="body">
+    <form id="form-edit">
+      <div class="field">
+        <label for="edit-id">ID barang</label>
+        <input type="number" id="edit-id" readonly>
+      </div>
+      <div class="field">
+        <label for="edit-nama">Nama komponen</label>
+        <input type="text" id="edit-nama" required>
+      </div>
+      <div class="field">
+        <label for="edit-rak">Lokasi Rak</label>
+        <input type="text" id="edit-rak" required>
+      </div>
+      <div class="dlg-aksi">
+        <button type="button" id="btn-batal-edit" class="btn ghost">Batal</button>
+        <button type="submit" class="btn">Simpan perubahan</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<div id="toast" aria-live="polite"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+const TOKEN_KEY = 'token_erp';
+let semuaBarang = [];
+
+/* --- UTILITAS --- */
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toast(teks, jenis){
+  const el = document.createElement('div');
+  el.className = 't ' + (jenis || '');
+  el.textContent = teks;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+function setStatus(ok){
+  const s = document.getElementById('status');
+  s.className = 'conn ' + (ok ? 'up' : 'down');
+  s.textContent = ok ? 'Server terhubung' : 'Server terputus';
+}
+
+// FastAPI bisa mengirim "detail" berupa string atau array (error validasi)
+function ambilPesanError(d, cadangan){
+  if (!d) return cadangan;
+  if (typeof d.detail === 'string') return d.detail;
+  if (Array.isArray(d.detail) && d.detail.length){
+    return d.detail.map(x => x.msg || JSON.stringify(x)).join('; ');
+  }
+  return d.pesan || cadangan;
+}
+
+function ambilToken(){ return localStorage.getItem(TOKEN_KEY); }
+
+function headerAuth(json){
+  const h = { 'Authorization': 'Bearer ' + ambilToken() };
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+function sesiHabis(){
+  localStorage.removeItem(TOKEN_KEY);
+  semuaBarang = [];
+  tampilkanDasbor(false);
+}
+
+/* --- AUTENTIKASI & TAMPILAN --- */
+function tampilkanDasbor(show){
+  document.getElementById('layar-login').classList.toggle('aktif', !show);
+  document.getElementById('layar-dasbor').classList.toggle('aktif', show);
+  if (show) { muatData(); muatRiwayat(); }
+}
+
+document.getElementById('form-login').addEventListener('submit', function(e){
+  e.preventDefault();
+  const form = this, tombol = form.querySelector('button');
+  tombol.disabled = true;
+
+  const dataLogin = new URLSearchParams();
+  dataLogin.append('grant_type', 'password');
+  dataLogin.append('username', document.getElementById('login-username').value.trim());
+  dataLogin.append('password', document.getElementById('login-password').value); // password tidak di-trim
+
+  fetch(API + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: dataLogin
+  })
+  .then(async r => {
+    if (!r.ok) {
+      const err = await r.json().catch(() => null);
+      throw new Error(ambilPesanError(err, 'Username atau password salah.'));
+    }
+    return r.json();
+  })
+  .then(data => {
+    localStorage.setItem(TOKEN_KEY, data.access_token);
+    toast('Login berhasil', 'good');
+    form.reset();
+    tampilkanDasbor(true);
+  })
+  .catch(error => {
+    const jaringan = error instanceof TypeError;
+    toast(jaringan ? 'Tidak dapat terhubung ke server (periksa API / CORS).' : error.message, 'err');
+    console.error(error);
+  })
+  .finally(() => tombol.disabled = false);
+});
+
+document.getElementById('btn-logout').addEventListener('click', function(){
+  sesiHabis();
+  toast('Anda telah keluar dari sistem.', 'good');
+});
+
+/* --- RENDER DATA --- */
+function statusStok(stok){
+  if (stok < 5)  return '<span class="tag low">Menipis</span>';
+  if (stok < 20) return '<span class="tag mid">Cukup</span>';
+  return '<span class="tag ok">Aman</span>';
+}
+
+function render(){
+  const q = document.getElementById('cari').value.trim().toLowerCase();
+  const daftar = semuaBarang.filter(b =>
+    !q || String(b.nama).toLowerCase().includes(q) || String(b.id).includes(q)
+  );
+  const tabel = document.getElementById('tabel-data');
+
+  if (!daftar.length){
+    tabel.innerHTML = '<tr><td colspan="6" class="empty">' +
+      (semuaBarang.length
+        ? 'Tidak ada barang yang cocok dengan pencarian.'
+        : 'Belum ada barang. Tambahkan barang pertama lewat formulir di atas.') +
+      '</td></tr>';
+    return;
+  }
+
+  tabel.innerHTML = daftar.map(b => `<tr>
+    <td class="id">${esc(b.id)}</td>
+    <td class="nm">${esc(b.nama)}</td>
+    <td class="num">${esc(b.stok)}</td>
+    <td><span class="rak">${esc(b.lokasi_rak || 'Belum diatur')}</span></td>
+    <td>${statusStok(Number(b.stok))}</td>
+    <td><div class="aksi"><button type="button" class="btn ghost" data-edit="${esc(b.id)}">Edit</button><button type="button" class="btn del" data-hapus="${esc(b.id)}" data-nama="${esc(b.nama)}">Hapus</button></div></td>
+  </tr>`).join('');
+}
+
+function ringkasan(){
+  const low = semuaBarang.filter(b => b.stok < 5).length;
+  document.getElementById('s-jenis').textContent = semuaBarang.length;
+  document.getElementById('s-total').textContent =
+    semuaBarang.reduce((a, b) => a + (Number(b.stok) || 0), 0).toLocaleString('id-ID');
+  document.getElementById('s-low').textContent = low;
+  document.getElementById('s-low-card').classList.toggle('alert', low > 0);
+}
+
+function muatData(){
+  return fetch(API + '/barang', { headers: headerAuth(false) })
+    .then(r => {
+      if (r.status === 401) {
+        sesiHabis();
+        throw new Error('Sesi kedaluwarsa. Silakan login kembali.');
+      }
+      if (!r.ok) throw new Error('Server mengembalikan error ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      semuaBarang = Array.isArray(data) ? data : (data.data || []);
+      setStatus(true);
+      ringkasan();
+      render();
+    })
+    .catch(err => {
+      setStatus(false);
+      if (err instanceof TypeError) {
+        document.getElementById('tabel-data').innerHTML =
+          '<tr><td colspan="6" class="empty">Tidak dapat terhubung ke server. Pastikan API berjalan di 127.0.0.1:8000.</td></tr>';
+      } else {
+        toast(err.message, 'err');
+      }
+    });
+}
+
+document.getElementById('cari').addEventListener('input', render);
+
+/* --- TAMBAH BARANG --- */
+document.getElementById('form-tambah').addEventListener('submit', function(e){
+  e.preventDefault();
+  const form = this, tombol = form.querySelector('button');
+
+  const dataKirim = {
+    id: parseInt(document.getElementById('input-id').value, 10),
+    nama: document.getElementById('input-nama').value.trim(),
+    stok: parseInt(document.getElementById('input-stok').value, 10),
+    lokasi_rak: document.getElementById('input-rak').value.trim()
+  };
+
+  tombol.disabled = true;
+
+  fetch(API + '/barang', {
+    method: 'POST',
+    headers: headerAuth(true),
+    body: JSON.stringify(dataKirim)
+  })
+  .then(async r => {
+    if (r.status === 401) {
+      sesiHabis();
+      throw new Error('Sesi kedaluwarsa. Silakan login kembali.');
+    }
+    const d = await r.json().catch(() => ({}));
+    return { ok: r.ok, d };
+  })
+  .then(({ ok, d }) => {
+    toast(ok ? (d.pesan || 'Barang berhasil disimpan.') : ambilPesanError(d, 'Permintaan tidak dapat diproses.'), ok ? 'good' : 'err');
+    if (ok) { form.reset(); muatData(); }
+  })
+  .catch(err => toast(err.message || 'Koneksi ke server gagal.', 'err'))
+  .finally(() => tombol.disabled = false);
+});
+
+/* --- TRANSAKSI PENGAMBILAN --- */
+document.getElementById('form-transaksi').addEventListener('submit', function(e){
+  e.preventDefault();
+  const form = this, tombol = form.querySelector('button');
+
+  const dataKirim = {
+    id_karyawan: document.getElementById('input-id-karyawan').value.trim(),
+    barang_id: parseInt(document.getElementById('input-id-barang').value, 10),
+    jumlah_diambil: parseInt(document.getElementById('input-jumlah').value, 10),
+    keterangan: document.getElementById('input-keterangan').value.trim()
+  };
+
+  tombol.disabled = true;
+
+  fetch(API + '/transaksi', {
+    method: 'POST',
+    headers: headerAuth(true),
+    body: JSON.stringify(dataKirim)
+  })
+  .then(async r => {
+    if (r.status === 401) {
+      sesiHabis();
+      throw new Error('Sesi kedaluwarsa. Silakan login kembali.');
+    }
+    const d = await r.json().catch(() => ({}));
+    return { ok: r.ok, d };
+  })
+  .then(({ ok, d }) => {
+    if (ok && d.pesan) {
+      const sisa = d.sisa_stok !== undefined ? ' Sisa stok di gudang: ' + d.sisa_stok : '';
+      toast(d.pesan + sisa, 'good');
+      form.reset();
+      muatData();
+      muatRiwayat();
+    } else {
+      toast(ambilPesanError(d, 'Transaksi gagal diproses.'), 'err');
+    }
+  })
+  .catch(err => toast(err.message || 'Koneksi ke server gagal.', 'err'))
+  .finally(() => tombol.disabled = false);
+});
+
+/* --- BARANG MASUK (TAMBAH STOK) --- */
+document.getElementById('form-masuk').addEventListener('submit', function(e){
+  e.preventDefault();
+  const form = this, tombol = form.querySelector('button');
+  const idBarang = parseInt(document.getElementById('input-id-masuk').value, 10);
+  const ket = document.getElementById('input-ket-masuk').value.trim();
+
+  const dataKirim = {
+    jumlah: parseInt(document.getElementById('input-jumlah-masuk').value, 10),
+    keterangan: ket || null
+  };
+
+  tombol.disabled = true;
+
+  fetch(API + '/barang/' + encodeURIComponent(idBarang) + '/stok-masuk', {
+    method: 'POST',
+    headers: headerAuth(true),
+    body: JSON.stringify(dataKirim)
+  })
+  .then(async r => {
+    if (r.status === 401) {
+      sesiHabis();
+      throw new Error('Sesi kedaluwarsa. Silakan login kembali.');
+    }
+    const d = await r.json().catch(() => ({}));
+    return { ok: r.ok, d };
+  })
+  .then(({ ok, d }) => {
+    if (ok) {
+      toast((d.pesan || 'Stok berhasil ditambah.') + (d.sisa_stok !== undefined ? ' Stok sekarang: ' + d.sisa_stok : ''), 'good');
+      form.reset();
+      muatData();
+      muatRiwayat();
+    } else {
+      toast(ambilPesanError(d, 'Gagal menambah stok.'), 'err');
+    }
+  })
+  .catch(err => toast(err.message || 'Koneksi ke server gagal.', 'err'))
+  .finally(() => tombol.disabled = false);
+});
+
+/* --- MUTASI STOK --- */
+let semuaMutasi = [];
+
+function formatWaktu(iso){
+  if (!iso) return '-';
+  const d = new Date(iso);
+  if (isNaN(d)) return String(iso);
+  return d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function renderMutasi(){
+  const f = document.getElementById('filter-mutasi').value;
+  const daftar = semuaMutasi.filter(m => !f || m.tipe === f);
+  const tabel = document.getElementById('tabel-riwayat');
+  if (!daftar.length){
+    tabel.innerHTML = '<tr><td colspan="7" class="empty">Belum ada mutasi stok.</td></tr>';
+    return;
+  }
+  tabel.innerHTML = daftar.map(m => {
+    const masuk = m.tipe === 'masuk';
+    return `<tr>
+      <td class="kode">${esc(m.kode)}</td>
+      <td class="waktu">${esc(formatWaktu(m.tanggal))}</td>
+      <td><span class="tag ${masuk ? 'in' : 'out'}">${masuk ? 'Masuk' : 'Keluar'}</span></td>
+      <td class="nm">${esc(m.nama_barang || ('ID ' + m.barang_id))}</td>
+      <td class="num ${masuk ? 'plus' : 'minus'}">${masuk ? '+' : '−'}${esc(m.jumlah)}</td>
+      <td>${esc(m.oleh)}</td>
+      <td>${esc(m.keterangan || '-')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function muatRiwayat(){
+  return fetch(API + '/mutasi?limit=100', { headers: headerAuth(false) })
+    .then(r => {
+      if (r.status === 401) { sesiHabis(); return null; }  // pesan ditampilkan oleh muatData
+      if (!r.ok) throw new Error('Gagal memuat mutasi stok (error ' + r.status + ')');
+      return r.json();
+    })
+    .then(data => {
+      if (!data) return;
+      semuaMutasi = data.data || [];
+      renderMutasi();
+    })
+    .catch(err => {
+      document.getElementById('tabel-riwayat').innerHTML =
+        '<tr><td colspan="7" class="empty">Mutasi stok tidak dapat dimuat.</td></tr>';
+      if (!(err instanceof TypeError)) toast(err.message, 'err');
+    });
+}
+
+document.getElementById('btn-muat-riwayat').addEventListener('click', muatRiwayat);
+document.getElementById('filter-mutasi').addEventListener('change', renderMutasi);
+
+/* --- EDIT BARANG --- */
+const dlgEdit = document.getElementById('dlg-edit');
+
+document.getElementById('tabel-data').addEventListener('click', function(e){
+  const tombol = e.target.closest('[data-edit]');
+  if (!tombol) return;
+  const b = semuaBarang.find(x => String(x.id) === tombol.dataset.edit);
+  if (!b) return;
+  document.getElementById('edit-id').value = b.id;
+  document.getElementById('edit-nama').value = b.nama;
+  document.getElementById('edit-rak').value = b.lokasi_rak || '';
+  dlgEdit.showModal();
+});
+
+document.getElementById('btn-batal-edit').addEventListener('click', () => dlgEdit.close());
+
+document.getElementById('form-edit').addEventListener('submit', function(e){
+  e.preventDefault();
+  const tombol = this.querySelector('button[type="submit"]');
+  const id = document.getElementById('edit-id').value;
+  const dataKirim = {
+    nama: document.getElementById('edit-nama').value.trim(),
+    lokasi_rak: document.getElementById('edit-rak').value.trim()
+  };
+
+  tombol.disabled = true;
+
+  fetch(API + '/barang/' + encodeURIComponent(id), {
+    method: 'PUT',
+    headers: headerAuth(true),
+    body: JSON.stringify(dataKirim)
+  })
+  .then(async r => {
+    if (r.status === 401) {
+      dlgEdit.close();
+      sesiHabis();
+      throw new Error('Sesi kedaluwarsa. Silakan login kembali.');
+    }
+    const d = await r.json().catch(() => ({}));
+    return { ok: r.ok, d };
+  })
+  .then(({ ok, d }) => {
+    if (ok) {
+      toast(d.pesan || 'Barang berhasil diperbarui.', 'good');
+      dlgEdit.close();
+      muatData();
+      muatRiwayat();  // nama barang di mutasi ikut diperbarui
+    } else {
+      toast(ambilPesanError(d, 'Gagal memperbarui barang.'), 'err');
+    }
+  })
+  .catch(err => toast(err.message || 'Koneksi ke server gagal.', 'err'))
+  .finally(() => tombol.disabled = false);
+});
+
+/* --- HAPUS BARANG --- */
+document.getElementById('tabel-data').addEventListener('click', function(e){
+  const tombol = e.target.closest('[data-hapus]');
+  if (tombol) hapusBarang(tombol.dataset.hapus, tombol.dataset.nama);
+});
+
+function hapusBarang(id, nama){
+  if (!confirm('Hapus barang "' + nama + '" (ID ' + id + ')? Tindakan ini tidak dapat dibatalkan.')) return;
+
+  fetch(API + '/barang/' + encodeURIComponent(id), {
+    method: 'DELETE',
+    headers: headerAuth(true)
+  })
+  .then(async r => {
+    if (r.status === 401) {
+      sesiHabis();
+      throw new Error('Sesi kedaluwarsa. Silakan login kembali.');
+    }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(ambilPesanError(d, 'Gagal menghapus barang.'));
+    return d;
+  })
+  .then(d => {
+    toast(d.pesan || 'Barang berhasil dihapus.', 'good');
+    muatData();
+  })
+  .catch(err => toast(err.message || 'Gagal menghapus barang.', 'err'));
+}
+
+/* --- INISIALISASI: cek token saat halaman dimuat --- */
+tampilkanDasbor(!!ambilToken());
+</script>
+</body>
+</html>
